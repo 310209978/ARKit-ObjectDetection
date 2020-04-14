@@ -14,20 +14,37 @@ class ViewController: UIViewController, ARSCNViewDelegate {
 
     @IBOutlet var sceneView: ARSCNView!
     
+    let configuration = ARWorldTrackingConfiguration()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
         // Set the view's delegate
         sceneView.delegate = self
         
+        sceneView.debugOptions = [ARSCNDebugOptions.showWorldOrigin, ARSCNDebugOptions.showFeaturePoints]
+        sceneView.delegate = self
+        guard let storedObjects = ARReferenceObject.referenceObjects(inGroupNamed: "AR Resources", bundle: nil) else {
+        fatalError("Missing AR Resources images") }
+        
+        configuration.detectionObjects = storedObjects
+        sceneView.session.run(configuration)
+        
         // Show statistics such as fps and timing information
         sceneView.showsStatistics = true
         
-        // Create a new scene
-        let scene = SCNScene(named: "art.scnassets/ship.scn")!
-        
-        // Set the scene to the view
-        sceneView.scene = scene
+    }
+    
+    func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
+    if let objectAnchor = anchor as? ARObjectAnchor {
+        let movingImage = SCNText(string: "Object Detected", extrusionDepth: 0.0)
+        movingImage.flatness = 0.1
+        movingImage.font = UIFont.boldSystemFont(ofSize: 10)
+        let titleNode = SCNNode()
+        titleNode.geometry = movingImage
+        titleNode.geometry?.firstMaterial?.diffuse.contents = UIColor.white
+        titleNode.scale = SCNVector3(0.0015, 0.0015, 0.0015)
+        node.addChildNode(titleNode) }
     }
     
     override func viewWillAppear(_ animated: Bool) {
